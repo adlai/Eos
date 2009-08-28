@@ -2,7 +2,7 @@
 
 (in-package :Eos)
 
-(in-suite :Eos)
+(in-suite Eos)
 
 (def-suite test-suite :description "Suite for tests which should fail.")
 

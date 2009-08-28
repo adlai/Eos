@@ -4,8 +4,7 @@
   :author "Adlai Chandrasekhar"
   :license "MIT"
   :depends-on (:arnesi)
-  :components ((:static-file "eos.asd")
-               (:module "src"
+  :components ((:module "src"
                         :components
                         ((:file "package")
                          (:file "classes" :depends-on ("package"))
@@ -15,12 +14,20 @@
                          (:file "test"    :depends-on ("classes"))
                          (:file "explain" :depends-on ("classes" "check"))
                          (:file "suite"   :depends-on ("test"))
-                         (:file "run"     :depends-on ("suite" "check"))))
-               (:module "tests"
-                        :depends-on ("src")
-                        :components
-                        ((:file "suite")
-                         (:file "tests" :depends-on ("suite"))))))
+                         (:file "run"     :depends-on ("suite" "check"))))))
 
-(defmethod asdf:perform ((op asdf:test-op) (system (eql (find-system :Eos))))
-  (funcall (intern (string :run!) (string :Eos)) :Eos))
+(asdf:defsystem :Eos-tests
+  :author "Adlai Chandrasekhar"
+  :license "MIT"
+  :depends-on (:Eos)
+  :components ((:module "tests"
+                         :components
+                         ((:file "suite")
+                          (:file "tests" :depends-on ("suite"))))))
+
+(defmethod asdf:perform ((op asdf:test-op) (system (eql (asdf:find-system :Eos))))
+  (format t "~&~%*******************~%~
+                 ** Loading tests **~%~
+                 *******************~%")
+  (asdf:oos 'asdf:load-op :Eos-tests)
+  (asdf:oos 'asdf:test-op :Eos-tests))

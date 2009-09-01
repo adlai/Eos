@@ -14,6 +14,31 @@
   `(let ((it ,test))
      (if it ,true ,false)))
 
+;;; This is taken from Arnesi's src/accumulation.lisp, and is way
+;;; too complicated for its simple use here.
+
+(defun make-collector (&optional initial-value)
+  "Create a collector function.
+
+A Collector function will collect, into a list, all the values
+passed to it in the order in which they were passed. If the
+callector function is called without arguments it returns the
+current list of values."
+  (let ((value initial-value)
+        (cdr (last initial-value)))
+    (lambda (&rest items)
+      (if items
+          (progn
+            (if value
+                (if cdr
+                    (setf (cdr cdr) items
+                          cdr (last items))
+                    (setf cdr (last items)))
+                (setf value items
+                      cdr (last items)))
+            items)
+          value))))
+
 ;;; This is taken from Arnesi's src/list.lisp, and partitions
 ;;; a list into separate parts using predicate lambdas
 

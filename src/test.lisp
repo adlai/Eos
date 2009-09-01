@@ -21,7 +21,7 @@
   "Create a test named NAME. If NAME is a list it must be of the
 form:
 
-  (name &key depends-on suite fixture compile-at profile)
+  (name &key depends-on suite fixture compile-at)
 
 NAME is the symbol which names the test.
 
@@ -42,16 +42,14 @@ If DEPENDS-ON is a symbol it is interpreted as `(AND
 ,depends-on), this is accomadate the common case of one test
 depending on another.
 
-FIXTURE specifies a fixtrue to wrap the body in.
-
-If PROFILE is T profiling information will be collected as well."
+FIXTURE specifies a fixtrue to wrap the body in."
   (let* ((tmp (gensym))
          (suite-arg (getf (cdr (ensure-list name)) :suite tmp))
          (suite-form (if (eq tmp suite-arg) '*suite*
                          `(get-test ',suite-arg))))
     (when (consp name) (remf (cdr name) :suite))
     (destructuring-bind
-          (name &key depends-on (compile-at :run-time) fixture profile)
+          (name &key depends-on (compile-at :run-time) fixture)
         (ensure-list name)
       (declare (type (member :run-time :definition-time) compile-at))
       (let ((description (if (stringp (car body)) (pop body) ""))
@@ -76,8 +74,7 @@ If PROFILE is T profiling information will be collected as well."
                                                                       ,@effective-body))))))
                                        (:definition-time effective-body)))
                                 :description ,description
-                                :depends-on ',depends-on
-                                :collect-profiling-info ,profile))
+                                :depends-on ',depends-on))
            (setf (gethash ',name (tests ,suite-form)) ',name)
            (when *run-test-when-defined* (run! ',name))
            ',name)))))

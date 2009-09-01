@@ -15,18 +15,7 @@
 	   dependencies, have passed. NIL - this test
 	   failed (either it failed or its dependecies weren't
 	   met. :circular this test has a circular dependency
-	   and was skipped. Or :depends-not-satisfied or :resolving")
-   (profiling-info :accessor profiling-info
-                   :initform nil
-                   :documentation "An object representing how
-                   much time and memory where used by the
-                   test.")
-   (collect-profiling-info :accessor collect-profiling-info
-                           :initarg :collect-profiling-info
-                           :initform nil
-                           :documentation "When T profiling
-                           information will be collected when the
-                           test is run.")))
+	   and was skipped. Or :depends-not-satisfied or :resolving")))
 
 (defmethod print-object ((test testable-object) stream)
   (print-unreadable-object (test stream :type t :identity t)

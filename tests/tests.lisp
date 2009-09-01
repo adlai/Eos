@@ -215,7 +215,7 @@
     (is (stringp s)))
   (for-all ((s (gen-string :length (gen-integer :min 0 :max 2))))
     (is (<= (length s) 2)))
-  (for-all ((s (gen-string :elements (gen-character :code (gen-integer :min 0 :max 0))
+  (for-all ((s (gen-string :elements (constantly (code-char 0))
                            :length (constantly 2))))
     (is (= 2 (length s)))
     (is (every (curry #'char= #\Null) s))))

@@ -56,14 +56,13 @@ See also: DEF-SUITE *SUITE*"
   `(%in-suite ,suite-name :in ,in :fail-on-error nil))
 
 (defmacro %in-suite (suite-name &key (fail-on-error t) in)
-  (with-unique-names (suite)
-    `(progn
-       (if-bind ,suite (get-test ',suite-name)
-           (setf *suite* ,suite)
-           (progn
-             (when ,fail-on-error
-               (cerror "Create a new suite named ~A."
-                       "Unkown suite ~A." ',suite-name))
-             (setf (get-test ',suite-name) (make-suite ',suite-name :in ',in)
-                   *suite* (get-test ',suite-name))))
-       ',suite-name)))
+  `(progn
+     (aif (get-test ',suite-name)
+          (setf *suite* it)
+          (progn
+            (when ,fail-on-error
+              (cerror "Create a new suite named ~A."
+                      "Unkown suite ~A." ',suite-name))
+            (setf (get-test ',suite-name) (make-suite ',suite-name :in ',in)
+                  *suite* (get-test ',suite-name))))
+     ',suite-name))

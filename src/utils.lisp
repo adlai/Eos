@@ -14,6 +14,27 @@
   `(let ((it ,test))
      (if it ,true ,false)))
 
+;;; This is taken from Arnesi's src/list.lisp, and partitions
+;;; a list into separate parts using predicate lambdas
+
+(defun partitionx (list &rest lambdas)
+  (let ((collectors (mapcar (lambda (l)
+                              (cons (if (and (symbolp l)
+					     (member l (list :otherwise t)
+                                                     :test #'string=))
+                                        (constantly t)
+                                        l)
+                                    (make-collector)))
+                            lambdas)))
+    (dolist (item list)
+      (block item
+        (dolist (collector collectors)
+          (destructuring-bind (test-func . collector-func) collector
+            (when (funcall test-func item)
+              (funcall collector-func item)
+              (return-from item))))))
+    (mapcar #'funcall (mapcar #'cdr collectors))))
+
 ;;; This is taken from Arnesi's src/one-liners.lisp, and implements a
 ;;; more sophisticated version of PCL's WITH-GENSYMS.
 

@@ -2,7 +2,7 @@
 
 (in-package :Eos)
 
-(defvar *fixture* (build-hash-table '(:test eql) nil)
+(defvar *fixture* (make-hash-table)
   "Table mapping fixture names to fixture objects.")
 
 (defun get-fixture (key &optional default)

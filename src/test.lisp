@@ -2,7 +2,7 @@
 
 (in-package :Eos)
 
-(defvar *test* (build-hash-table '(:test eql) nil)
+(defvar *test* (make-hash-table)
   "Table containing all test and test suite objects.")
 
 (defun get-test (key &optional default)

@@ -14,6 +14,39 @@
   `(let ((it ,test))
      (if it ,true ,false)))
 
+(defun parallel-lookup (thing key-list value-list &key (test #'eql) (key #'identity))
+  (map nil (lambda (k v)
+             (when (funcall test thing (funcall key k))
+               (return-from parallel-lookup v)))
+       key-list value-list))
+
+(defmacro pushend (new-item list list-end &environment env)
+  (multiple-value-bind (list.gvars list.vals list.gstorevars list.setter list.getter)
+      (get-setf-expansion list env)
+    (multiple-value-bind (tail.gvars tail.vals tail.gstorevars tail.setter tail.getter)
+        (get-setf-expansion list-end env)
+      (let ((gitem (gensym))
+            (list.gstorevar (first list.gstorevars))
+            (tail.gstorevar (first tail.gstorevars)))
+        `(let (,@(mapcar #'list list.gvars list.vals)
+               ,@(mapcar #'list tail.gvars tail.vals))
+           (let ((,gitem (list ,new-item)))
+             (if ,list.getter
+                 (let ((,tail.gstorevar ,gitem))
+                   (setf (cdr ,tail.getter) ,gitem)
+                   ,tail.setter)
+                 (let ((,list.gstorevar ,gitem)
+                       (,tail.gstorevar ,gitem))
+                   ,list.setter ,tail.setter))))))))
+
+(defmacro with-push-onto ((&rest places) &body body)
+  (let ((end-names (mapcar (fn (gensym (symbol-name _))) places)))
+    `(let (,@places ,@end-names)
+       (macrolet ((push-onto (place thing)
+                    `(pushend ,thing ,place
+                              ,(parallel-lookup place ',places ',end-names))))
+         ,@body))))
+
 ;;; This is taken from Arnesi's src/one-liners.lisp, and implements a
 ;;; more sophisticated version of PCL's WITH-GENSYMS.
 

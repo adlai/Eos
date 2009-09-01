@@ -77,11 +77,9 @@ when appropiate."))
   (with-run-state (result-list current-test)
     (let ((result (apply #'make-instance result-type
                          (append make-instance-args (list :test-case current-test)))))
-      (etypecase result
-        (test-passed  (format *test-dribble* "."))
-        (unexpected-test-failure (format *test-dribble* "X"))
-        (test-failure (format *test-dribble* "f"))
-        (test-skipped (format *test-dribble* "s")))
+      (format *test-dribble* (etypecase result
+                               (test-passed             ".") (test-skipped "s")
+                               (unexpected-test-failure "X") (test-failure "f")))
       (push result result-list))))
 
 (defmacro is (test &rest reason-args)

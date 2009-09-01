@@ -82,7 +82,7 @@
         (values 0 nil 0 0 nil 0 0 nil 0 0 nil 0 0)
         (values
          num-checks
-         passed (length passed) (floor (* 100 (/ (length passed) num-checks)))
+         passed  (length passed)  (floor (* 100 (/ (length passed) num-checks)))
          skipped (length skipped) (floor (* 100 (/ (length skipped) num-checks)))
-         failed (length failed) (floor (* 100 (/ (length failed) num-checks)))
+         failed  (length failed)  (floor (* 100 (/ (length failed) num-checks)))
          unknown (length unknown) (floor (* 100 (/ (length failed) num-checks)))))))

@@ -66,23 +66,19 @@
       (format stream "~vT~D UNKNOWN RESULTS.~%" recursive-depth num-unknown))))
 
 (defun partition-results (results-list)
-  (let ((num-checks (length results-list))
-        passed skipped failed unknown)
-    (dolist (result results-list)
-      (typecase result
-        (test-passed  (push result passed))
-        (test-skipped (push result skipped))
-        (test-failure (push result failed))
-        (otherwise    (push result unknown))))
-    (setf passed  (nreverse passed)
-          skipped (nreverse skipped)
-          failed  (nreverse failed)
-          unknown (nreverse unknown))
-    (if (zerop num-checks)
-        (values 0 nil 0 0 nil 0 0 nil 0 0 nil 0 0)
-        (values
-         num-checks
-         passed  (length passed)  (floor (* 100 (/ (length passed) num-checks)))
-         skipped (length skipped) (floor (* 100 (/ (length skipped) num-checks)))
-         failed  (length failed)  (floor (* 100 (/ (length failed) num-checks)))
-         unknown (length unknown) (floor (* 100 (/ (length failed) num-checks)))))))
+  (let ((num-checks (length results-list)))
+    (with-push-onto (passed skipped failed unknown)
+      (dolist (result results-list)
+        (typecase result
+          (test-passed  (push-onto passed result))
+          (test-skipped (push-onto skipped result))
+          (test-failure (push-onto failed result))
+          (otherwise    (push-onto unknown result))))
+      (if (zerop num-checks)
+          (values 0 nil 0 0 nil 0 0 nil 0 0 nil 0 0)
+          (values
+           num-checks
+           passed  (length passed)  (floor (* 100 (/ (length passed) num-checks)))
+           skipped (length skipped) (floor (* 100 (/ (length skipped) num-checks)))
+           failed  (length failed)  (floor (* 100 (/ (length failed) num-checks)))
+           unknown (length unknown) (floor (* 100 (/ (length failed) num-checks))))))))

@@ -108,11 +108,8 @@ REASON-ARGS is provided, is generated based on the form of TEST:
                (when (and (consp actual) (eq (car actual) 'values))
                  (assert (not (and (consp expected) (eq (car expected) 'values))) ()
                          "Both the expected and actual part is a values expression.")
-                 (let ((tmp expected))
-                   ;; SHIFTF much?
-                   (setf expected actual
-                         actual tmp)))
-               (let ((setf-forms))
+                 (rotatef expected actual))
+               (let (setf-forms)
                  (if (and (consp expected) (eq (car expected) 'values))
                      (progn
                        (setf expected (copy-list expected))

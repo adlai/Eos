@@ -154,15 +154,13 @@ run."))
            (bind-run-state ((result-list '()))
              (run-tests)
              (setf suite-results result-list
-                   (status suite) (every (lambda (res)
-                                           (typep res 'test-passed))
-                                         suite-results)))
+                   (status suite) (every (fn (typep _ 'test-passed)) suite-results)))
         (with-run-state (result-list)
           (setf result-list (nconc result-list suite-results)))))))
 
 (defmethod %run ((test-name symbol))
-  (when-bind test (get-test test-name)
-    (%run test)))
+  (when (get-test test-name)
+    (%run (get-test test-name))))
 
 (defvar *initial-!* (lambda () (format t "Haven't run that many tests yet.~%")))
 (defvar *!* *initial-!*)

@@ -3,7 +3,6 @@
 (asdf:defsystem :Eos
   :author "Adlai Chandrasekhar"
   :license "MIT"
-  :depends-on (:arnesi)
   :components ((:module "src"
                         :components
                         ((:file "package")

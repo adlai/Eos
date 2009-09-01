@@ -41,9 +41,9 @@
 
 (defmacro process-failure (&rest args)
   `(progn
-    (with-simple-restart (ignore-failure "Continue the test run.")
-      (error 'check-failure ,@args))
-    (add-result 'test-failure ,@args)))
+     (with-simple-restart (ignore-failure "Continue the test run.")
+       (error 'check-failure ,@args))
+     (add-result 'test-failure ,@args)))
 
 (defclass test-failure (test-result) ()
   (:documentation "Class for unsuccessful checks."))

@@ -9,10 +9,22 @@
      (declare (special *test-dribble*))
      ,@body))
 
+;;; This function is taken from Arnesi, to help with the following macros
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (def-special-environment run-state ()
-    result-list
-    current-test))
+  (defun check-required (name vars required)
+    (dolist (var required)
+      (assert (member var vars) (var)
+              "Unrecognized symbol ~S in ~S." var name))))
+
+(symbol-macrolet ((name 'run-state) (vars '(result-list current-test)))
+  (defmacro bind-run-state (requested-vars &body body)
+    (check-required name vars (mapcar 'car requested-vars))
+    `(let ,requested-vars
+       (declare (special ,@(mapcar 'car requested-vars)))
+       ,@body))
+  (defmacro with-run-state (requested-vars &body body)
+    (check-required name vars requested-vars)
+    `(locally (declare (special ,@requested-vars)) ,@body)))
 
 (defclass test-result ()
   ((reason :accessor reason :initarg :reason :initform "no reason given")

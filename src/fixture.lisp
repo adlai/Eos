@@ -2,8 +2,19 @@
 
 (in-package :Eos)
 
-(deflookup-table fixture
-  :documentation "Lookup table mapping fixture names to fixture objects.")
+(defvar *fixture* (build-hash-table '(:test eql) nil)
+  "Table mapping fixture names to fixture objects.")
+
+(defun get-fixture (key &optional default)
+  (gethash key *fixture* default))
+
+(defun (setf get-fixture) (value key)
+  (when (gethash key *fixture*)
+    (warn "Redefining fixture ~a" key))
+  (setf (gethash key *fixture*) value))
+
+(defun rem-fixture (key)
+  (remhash key *fixture*))
 
 (defmacro def-fixture (name args &body body)
   "Defines a fixture named NAME. A fixture is very much like a

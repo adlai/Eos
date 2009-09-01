@@ -2,10 +2,17 @@
 
 (in-package :Eos)
 
-(deflookup-table test
-  :at-redefinition nil
-  :documentation "Lookup table mapping test (and test suite)
-  names to objects.")
+(defvar *test* (build-hash-table '(:test eql) nil)
+  "Table containing all test and test suite objects.")
+
+(defun get-test (key &optional default)
+  (gethash key *test* default))
+
+(defun (setf get-test) (value key)
+  (setf (gethash key *test*) value))
+
+(defun rem-test (key)
+  (remhash key *test*))
 
 (defun test-names ()
   (loop for test being the hash-keys of *test* collect test))

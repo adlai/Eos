@@ -10,6 +10,10 @@
   (let ((parameter (intern "_")))
     `(lambda (,parameter) (declare (ignorable ,parameter)) ,@body)))
 
+(defmacro aif (test true &optional false)
+  `(let ((it ,test))
+     (if it ,true ,false)))
+
 ;;; This is taken from Arnesi's src/one-liners.lisp, and implements a
 ;;; more sophisticated version of PCL's WITH-GENSYMS.
 

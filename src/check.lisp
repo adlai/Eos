@@ -164,18 +164,6 @@ REASON-ARGS is provided, is generated based on the form of TEST:
   "Generates a TEST-SKIPPED result."
   `(add-result 'test-skipped :reason (format nil ,@reason)))
 
-(defmacro is-every (predicate &body clauses)
-  "The input is either a list of lists, or a list of pairs. Generates (is (,predicate ,expr ,value))
-   for each pair of elements or (is (,predicate ,expr ,value) ,@reason) for each list."
-  `(progn
-    ,@(if (every #'consp clauses)
-          (loop :for (expected actual . reason) :in clauses
-                :collect `(is (,predicate ,expected ,actual) ,@reason))
-          (progn
-            (assert (evenp (list-length clauses)))
-            (loop :for (expr value) :on clauses :by #'cddr
-                  :collect `(is (,predicate ,expr ,value)))))))
-
 (defmacro is-true (condition &rest reason-args)
   "Like IS this check generates a pass if CONDITION returns true
   and a failure if CONDITION returns false. Unlike IS this check

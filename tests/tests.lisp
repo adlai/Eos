@@ -218,7 +218,7 @@
   (for-all ((s (gen-string :elements (constantly (code-char 0))
                            :length (constantly 2))))
     (is (= 2 (length s)))
-    (is (every (curry #'char= #\Null) s))))
+    (is (every (fn (char= _ #\Null)) s))))
 
 (defun dummy-mv-generator ()
   (lambda ()

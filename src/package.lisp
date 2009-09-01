@@ -2,6 +2,7 @@
 
 (defpackage :Eos
   (:use :common-lisp :it.bese.arnesi)
+  (:shadow #:with-unique-names #:list-match-case)
   (:export ;; creating tests and test-suites
            #:make-suite
 	   #:def-suite

@@ -2,6 +2,9 @@
 
 (in-package :Eos)
 
+(defun ensure-list (x)
+  (if (listp x) x (list x)))
+
 (defmacro fn (&body body)
   "An abbreviation for some common lambda use-cases."
   (let ((parameter (intern "_")))

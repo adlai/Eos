@@ -2,6 +2,11 @@
 
 (in-package :Eos)
 
+(defmacro fn (&body body)
+  "An abbreviation for some common lambda use-cases."
+  (let ((parameter (intern "_")))
+    `(lambda (,parameter) (declare (ignorable ,parameter)) ,@body)))
+
 ;;; This is taken from Arnesi's src/one-liners.lisp, and implements a
 ;;; more sophisticated version of PCL's WITH-GENSYMS.
 

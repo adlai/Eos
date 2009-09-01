@@ -11,7 +11,7 @@ macro but is used only for simple templating. A fixture created
 with DEF-FIXTURE is a macro which can use the special macrolet
 &BODY to specify where the body should go.
 
-See Also: WITH-FIXTURE"
+See Also: `with-fixture'."
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (setf (get-fixture ',name) (cons ',args ',body))
      ',name))
@@ -19,7 +19,7 @@ See Also: WITH-FIXTURE"
 (defmacro with-fixture (fixture-name args &body body)
   "Insert BODY into the fixture named FIXTURE-NAME.
 
-See Also: DEF-FIXTURE"
+See Also: `def-fixture'."
   (assert (get-fixture fixture-name) (fixture-name)
           "Unknown fixture ~S." fixture-name)
   (destructuring-bind (largs &rest lbody) (get-fixture fixture-name)

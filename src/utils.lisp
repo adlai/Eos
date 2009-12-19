@@ -47,31 +47,18 @@
                               ,(parallel-lookup place ',places ',end-names))))
          ,@body))))
 
-;;; This is taken from Arnesi's src/one-liners.lisp, and implements a
-;;; more sophisticated version of PCL's WITH-GENSYMS.
+(defmacro with-gensyms ((&rest syms) &body body)
+  "This is a simple WITH-GENSYMS, similar to the one presented in PCL."
+  `(let ,(mapcar (fn `(,_ (gensym ,(string _)))) syms) ,@body))
 
-(defmacro with-unique-names ((&rest bindings) &body body)
-  ;; reference implementation posted to comp.lang.lisp as
-  ;; <cy3bshuf30f.fsf@ljosa.com> by Vebjorn Ljosa - see also
-  ;; <http://www.cliki.net/Common%20Lisp%20Utilities>
-  `(let ,(mapcar (lambda (binding)
-                   (check-type binding (or cons symbol))
-                   (destructuring-bind (var &optional (prefix (symbol-name var)))
-                       (if (consp binding) binding (list binding))
-                     (check-type var symbol)
-                     `(,var (gensym ,(concatenate 'string prefix "-")))))
-                 bindings)
-     ,@body))
-
-;;; This is taken from Arnesi's src/list.lisp, and implements a naive
-;;; list matching facility.
+;;; This is based on from Arnesi's src/list.lisp, and implements a naive ;;; list matching facility.
 ;;; Marco Baringer says in the original:
 ;;; ;;;; ** Simple list matching based on code from Paul Graham's On Lisp.
 
 (defmacro acond2 (&rest clauses)
   (if (null clauses)
       nil
-      (with-unique-names (val foundp)
+      (with-gensyms (val foundp)
         (destructuring-bind ((test &rest progn) &rest others)
             clauses
           `(multiple-value-bind (,val ,foundp)
@@ -121,7 +108,7 @@
   (if clauses
       (destructuring-bind ((test &rest progn) &rest others)
           clauses
-        (with-unique-names (tgt binds success)
+        (with-gensyms (tgt binds success)
           `(let ((,tgt ,target))
              (multiple-value-bind (,binds ,success)
                  (list-match ,tgt ',test)

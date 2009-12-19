@@ -198,8 +198,8 @@ not evaluated."
     (destructuring-bind (condition &optional reason-control reason-args)
         (ensure-list condition-spec)
       `(block ,block-name
-         (handler-bind ((,condition (fn (add-result 'test-passed :test-expr ',condition)
-                                        (return-from ,block-name t))))
+         (handler-bind ((,condition (fun (add-result 'test-passed :test-expr ',condition)
+                                         (return-from ,block-name t))))
            (block nil ,@body))
          (process-failure
           :reason ,(if reason-control

@@ -5,10 +5,8 @@
 (defun ensure-list (x)
   (if (listp x) x (list x)))
 
-(defmacro fn (&body body)
-  "An abbreviation for some common lambda use-cases."
-  (let ((parameter (intern "_")))
-    `(lambda (,parameter) (declare (ignorable ,parameter)) ,@body)))
+(defmacro fun (&body body)
+  `(lambda (&optional _) (declare (ignorable _)) ,@body))
 
 (defmacro aif (test true &optional false)
   `(let ((it ,test))
@@ -40,7 +38,7 @@
                    ,list.setter ,tail.setter))))))))
 
 (defmacro with-push-onto ((&rest places) &body body)
-  (let ((end-names (mapcar (fn (gensym (symbol-name _))) places)))
+  (let ((end-names (mapcar (fun (gensym (symbol-name _))) places)))
     `(let (,@places ,@end-names)
        (macrolet ((push-onto (place thing)
                     `(pushend ,thing ,place
@@ -49,7 +47,7 @@
 
 (defmacro with-gensyms ((&rest syms) &body body)
   "This is a simple WITH-GENSYMS, similar to the one presented in PCL."
-  `(let ,(mapcar (fn `(,_ (gensym ,(string _)))) syms) ,@body))
+  `(let ,(mapcar (fun `(,_ (gensym ,(string _)))) syms) ,@body))
 
 ;;; This is based on from Arnesi's src/list.lisp, and implements a naive ;;; list matching facility.
 ;;; Marco Baringer says in the original:

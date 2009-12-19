@@ -154,7 +154,7 @@ run."))
            (bind-run-state ((result-list '()))
              (run-tests)
              (setf suite-results result-list
-                   (status suite) (every (fn (typep _ 'test-passed)) suite-results)))
+                   (status suite) (every (fun (typep _ 'test-passed)) suite-results)))
         (with-run-state (result-list)
           (setf result-list (nconc result-list suite-results)))))))
 

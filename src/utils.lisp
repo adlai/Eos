@@ -12,42 +12,23 @@
   `(let ((it ,test))
      (if it ,true ,false)))
 
-(defun parallel-lookup (thing key-list value-list &key (test #'eql) (key #'identity))
-  (map nil (lambda (k v)
-             (when (funcall test thing (funcall key k))
-               (return-from parallel-lookup v)))
-       key-list value-list))
-
-(defmacro pushend (new-item list list-end &environment env)
-  (multiple-value-bind (list.gvars list.vals list.gstorevars list.setter list.getter)
-      (get-setf-expansion list env)
-    (multiple-value-bind (tail.gvars tail.vals tail.gstorevars tail.setter tail.getter)
-        (get-setf-expansion list-end env)
-      (let ((gitem (gensym))
-            (list.gstorevar (first list.gstorevars))
-            (tail.gstorevar (first tail.gstorevars)))
-        `(let (,@(mapcar #'list list.gvars list.vals)
-               ,@(mapcar #'list tail.gvars tail.vals))
-           (let ((,gitem (list ,new-item)))
-             (if ,list.getter
-                 (let ((,tail.gstorevar ,gitem))
-                   (setf (cdr ,tail.getter) ,gitem)
-                   ,tail.setter)
-                 (let ((,list.gstorevar ,gitem)
-                       (,tail.gstorevar ,gitem))
-                   ,list.setter ,tail.setter))))))))
-
-(defmacro with-push-onto ((&rest places) &body body)
-  (let ((end-names (mapcar (fun (gensym (symbol-name _))) places)))
-    `(let (,@places ,@end-names)
-       (macrolet ((push-onto (place thing)
-                    `(pushend ,thing ,place
-                              ,(parallel-lookup place ',places ',end-names))))
-         ,@body))))
-
 (defmacro with-gensyms ((&rest syms) &body body)
   "This is a simple WITH-GENSYMS, similar to the one presented in PCL."
   `(let ,(mapcar (fun `(,_ (gensym ,(string _)))) syms) ,@body))
+
+(defmacro collect (names &body body &aux macros binds)
+  (dolist (name names)
+    (with-gensyms (value tail)
+      (setf binds (list* value tail binds))
+      (push `(,name (&optional (form nil formp))
+               `(if ,formp
+                    (let ((cons (list ,form)))
+                       (cond ((null ,',tail)
+                              (setf ,',tail  cons ,',value cons))
+                             (t (setf (cdr ,',tail) cons ,',tail cons))))
+                    ,',value))
+            macros)))
+  `(let* ,(nreverse binds) (macrolet ,macros ,@body)))
 
 ;;; This is based on from Arnesi's src/list.lisp, and implements a naive ;;; list matching facility.
 ;;; Marco Baringer says in the original:

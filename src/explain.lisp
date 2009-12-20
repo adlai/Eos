@@ -67,18 +67,18 @@
 
 (defun partition-results (results-list)
   (let ((num-checks (length results-list)))
-    (with-push-onto (passed skipped failed unknown)
+    (collect (passed skipped failed unknown)
       (dolist (result results-list)
         (typecase result
-          (test-passed  (push-onto passed result))
-          (test-skipped (push-onto skipped result))
-          (test-failure (push-onto failed result))
-          (otherwise    (push-onto unknown result))))
+          (test-passed  (passed result))
+          (test-skipped (skipped result))
+          (test-failure (failed result))
+          (otherwise    (unknown result))))
       (if (zerop num-checks)
           (values 0 nil 0 0 nil 0 0 nil 0 0 nil 0 0)
           (values
            num-checks
-           passed  (length passed)  (floor (* 100 (/ (length passed) num-checks)))
-           skipped (length skipped) (floor (* 100 (/ (length skipped) num-checks)))
-           failed  (length failed)  (floor (* 100 (/ (length failed) num-checks)))
-           unknown (length unknown) (floor (* 100 (/ (length failed) num-checks))))))))
+           (passed)  (length (passed))  (floor (* 100 (/ (length (passed))  num-checks)))
+           (skipped) (length (skipped)) (floor (* 100 (/ (length (skipped)) num-checks)))
+           (failed)  (length (failed))  (floor (* 100 (/ (length (failed))  num-checks)))
+           (unknown) (length (unknown)) (floor (* 100 (/ (length (failed))  num-checks))))))))

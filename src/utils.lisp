@@ -30,9 +30,9 @@
             macros)))
   `(let* ,(nreverse binds) (macrolet ,macros ,@body)))
 
-;;; This is based on from Arnesi's src/list.lisp, and implements a naive ;;; list matching facility.
+;;; This is based on from Arnesi's src/list.lisp, and implements a naive list matching facility.
 ;;; Marco Baringer says in the original:
-;;; ;;;; ** Simple list matching based on code from Paul Graham's On Lisp.
+;;; "Simple list matching based on code from Paul Graham's On Lisp."
 
 (defmacro acond2 (&rest clauses)
   (if (null clauses)

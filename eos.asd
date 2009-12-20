@@ -26,8 +26,8 @@
                           (:file "tests" :depends-on ("suite"))))))
 
 (defmethod asdf:perform ((op asdf:test-op) (system (eql (asdf:find-system :Eos))))
-  (format t "~&~%*******************~%~
-                 ** Loading tests **~%~
-                 *******************~%")
+  (format t "~2&*******************~@
+                ** Loading tests **~@
+                *******************~%")
   (asdf:oos 'asdf:load-op :Eos-tests)
   (asdf:oos 'asdf:test-op :Eos-tests))

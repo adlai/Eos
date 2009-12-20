@@ -9,13 +9,12 @@
      (declare (special *test-dribble*))
      ,@body))
 
-(symbol-macrolet ((name 'run-state) (vars '(result-list current-test)))
-  (defmacro bind-run-state (requested-vars &body body)
-    `(let ,requested-vars
-       (declare (special ,@(mapcar 'car requested-vars)))
-       ,@body))
-  (defmacro with-run-state (requested-vars &body body)
-    `(locally (declare (special ,@requested-vars)) ,@body)))
+(defmacro bind-run-state (requested-vars &body body)
+  `(let ,requested-vars
+     (declare (special ,@(mapcar 'car requested-vars)))
+     ,@body))
+(defmacro with-run-state (requested-vars &body body)
+  `(locally (declare (special ,@requested-vars)) ,@body))
 
 (defclass test-result ()
   ((reason :accessor reason :initarg :reason :initform "no reason given")
@@ -212,7 +211,7 @@ not evaluated."
   "Generates a pass if BODY executes to normal completion. In
 other words if body does signal, return-from or throw this test
 fails."
-  `(let ((ok nil))
+  `(let (ok)
      (unwind-protect (progn ,@body (setf ok t))
        (if ok
            (add-result 'test-passed :test-expr ',body)

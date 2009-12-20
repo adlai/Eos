@@ -12,12 +12,6 @@
 	   #:get-test
 	   #:rem-test
            #:test-names
-	   ;; fixtures
-	   #:make-fixture
-	   #:def-fixture
-	   #:with-fixture
-	   #:get-fixture
-	   #:rem-fixture
 	   ;; running checks
            #:is
            #:is-every

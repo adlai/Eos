@@ -9,7 +9,6 @@
                          (:file "utils"   :depends-on ("package"))
                          (:file "classes" :depends-on ("package"))
                          (:file "check"   :depends-on ("utils"))
-                         (:file "fixture" :depends-on ("package"))
                          (:file "random"  :depends-on ("check"))
                          (:file "test"    :depends-on ("classes"))
                          (:file "explain" :depends-on ("classes" "check"))

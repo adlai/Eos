@@ -10,10 +10,6 @@
   `(let ((,results (with-*test-dribble* nil (run ',test-name))))
      ,@body))
 
-(rem-fixture 'null-fixture)
-(def-fixture null-fixture ()
-  `(progn ,@(&body)))
-
 ;;;; Test the checks
 
 (test (is1 :suite test-suite)
@@ -24,7 +20,7 @@
   (is-true t)
   (is-false nil))
 
-(test (is2 :suite test-suite :fixture null-fixture)
+(test (is2 :suite test-suite)
   (is (plusp 0))
   (is (< 0 -1))
   (is (not (plusp 1)))

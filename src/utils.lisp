@@ -35,21 +35,20 @@
 ;;; "Simple list matching based on code from Paul Graham's On Lisp."
 
 (defmacro acond2 (&rest clauses)
-  (if (null clauses)
-      nil
-      (with-gensyms (val foundp)
-        (destructuring-bind ((test &rest progn) &rest others)
-            clauses
-          `(multiple-value-bind (,val ,foundp)
-               ,test
-             (if (or ,val ,foundp)
-                 (let ((it ,val))
-                   (declare (ignorable it))
-                   ,@progn)
-                 (acond2 ,@others)))))))
+  (when clauses
+    (with-gensyms (val foundp)
+      (destructuring-bind ((test &rest progn) &rest others)
+          clauses
+        `(multiple-value-bind (,val ,foundp)
+             ,test
+           (if (or ,val ,foundp)
+               (let ((it ,val))
+                 (declare (ignorable it))
+                 ,@progn)
+               (acond2 ,@others)))))))
 
 (defun varsymp (x)
-  (and (symbolp x) (eq (aref (symbol-name x) 0) #\?)))
+  (and (symbolp x) (eql (char (symbol-name x) 0) #\?)))
 
 (defun binding (x binds)
   (labels ((recbind (x binds)
@@ -71,32 +70,23 @@
      (list-match (cdr x) (cdr y) it))
     (t (values nil nil))))
 
-(defun vars (match-spec)
-  (let ((vars nil))
-    (labels ((find-vars (spec)
-               (cond
-                 ((null spec) nil)
-                 ((varsymp spec) (push spec vars))
-                 ((consp spec)
-                  (find-vars (car spec))
-                  (find-vars (cdr spec))))))
-      (find-vars match-spec))
-    (delete-duplicates vars)))
+(defun find-vars (spec acc)
+  (typecase spec
+    (cons (find-vars (car spec) (find-vars (cdr spec) acc)))
+    ((satisfies varsymp) (adjoin spec acc :test #'eq))
+    (otherwise acc)))
 
 (defmacro list-match-case (target &body clauses)
-  (if clauses
-      (destructuring-bind ((test &rest progn) &rest others)
-          clauses
-        (with-gensyms (tgt binds success)
-          `(let ((,tgt ,target))
+  (when clauses
+    (destructuring-bind ((test . progn) . others) clauses
+      (with-gensyms (tgt binds success)
+        (let ((vars (find-vars test nil)))
+          `(let ((,tgt ,target)) ; (once-only (target) ..)
              (multiple-value-bind (,binds ,success)
                  (list-match ,tgt ',test)
                (declare (ignorable ,binds))
                (if ,success
-                   (let ,(mapcar (lambda (var)
-                                   `(,var (cdr (assoc ',var ,binds))))
-                                 (vars test))
-                     (declare (ignorable ,@(vars test)))
+                   (let ,(mapcar (fun `(,_ (cdr (assoc ',_ ,binds)))) vars)
+                     (declare (ignorable ,@vars))
                      ,@progn)
-                   (list-match-case ,tgt ,@others))))))
-      nil))
+                   (list-match-case ,tgt ,@others)))))))))

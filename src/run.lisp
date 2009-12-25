@@ -23,59 +23,53 @@
 between test-cases has been detected."))
 
 (defgeneric run-resolving-dependencies (test)
-  (:documentation "Given a dependency spec determine if the spec
-is satisfied or not, this will generally involve running other
-tests. If the dependency spec can be satisfied the test is alos
-run."))
+  (:documentation "Given a dependency spec determine if the spec is
+ satisfied or not, this will generally involve running other tests.
+ If the dependency spec can be satisfied the test is also run.")
+  (:method ((test test-case))
+    "Return true if this test, and its dependencies, are satisfied, NIL otherwise."
+    (case (status test)
+      (:unknown
+       (setf (status test) :resolving)
+       (if (or (not (depends-on test))
+               (eql t (resolve-dependencies (depends-on test))))
+           (progn
+             (run-test-lambda test)
+             (status test))
+           (with-run-state (result-list)
+             (unless (eql :circular (status test))
+               (push (make-instance 'test-skipped
+                                    :test-case test
+                                    :reason "Dependencies not satisfied")
+                     result-list)
+               (setf (status test) :depends-not-satisfied)))))
+      (:resolving
+       (restart-case
+           (error 'circular-dependency :test-case test)
+         (skip ()
+           :report (lambda (s)
+                     (format s "Skip the test ~S and all its dependencies." (name test)))
+           (with-run-state (result-list)
+             (push (make-instance 'test-skipped :reason "Circular dependencies" :test-case test)
+                   result-list))
+           (setf (status test) :circular))))
+      (t (status test)))))
 
-(defmethod run-resolving-dependencies ((test test-case))
-  "Return true if this test, and its dependencies, are satisfied,
-  NIL otherwise."
-  (case (status test)
-    (:unknown
-     (setf (status test) :resolving)
-     (if (or (not (depends-on test))
-             (eql t (resolve-dependencies (depends-on test))))
-         (progn
-           (run-test-lambda test)
-           (status test))
-         (with-run-state (result-list)
-           (unless (eql :circular (status test))
-             (push (make-instance 'test-skipped
-                                  :test-case test
-                                  :reason "Dependencies not satisfied")
-                   result-list)
-             (setf (status test) :depends-not-satisfied)))))
-    (:resolving
-     (restart-case
-         (error 'circular-dependency :test-case test)
-       (skip ()
-         :report (lambda (s)
-                   (format s "Skip the test ~S and all its dependencies." (name test)))
-         (with-run-state (result-list)
-           (push (make-instance 'test-skipped :reason "Circular dependencies" :test-case test)
-                 result-list))
-         (setf (status test) :circular))))
-    (t (status test))))
-
-(defmethod resolve-dependencies ((depends-on symbol))
-  "A test which depends on a symbol is interpreted as `(AND
-  ,DEPENDS-ON)."
-  (run-resolving-dependencies (get-test depends-on)))
-
-(defmethod resolve-dependencies ((depends-on list))
-  "Return true if the dependency spec DEPENDS-ON is satisfied,
-  nil otherwise."
-  (if (null depends-on)
-      t
-      (flet ((satisfies-depends-p (test)
-               (funcall test (lambda (dep)
-                               (eql t (resolve-dependencies dep)))
-                             (cdr depends-on))))
-        (ecase (car depends-on)
-          (and (satisfies-depends-p #'every))
-          (or  (satisfies-depends-p #'some))
-          (not (satisfies-depends-p #'notany))))))
+(defgeneric resolve-dependencies (depends-on)
+  (:method ((depends-on symbol))
+    "A test which depends on a symbol is interpreted as `(AND ,DEPENDS-ON)."
+    (run-resolving-dependencies (get-test depends-on)))
+  (:method ((depends-on list))
+    "Return true if the dependency spec DEPENDS-ON is satisfied,nil otherwise."
+    (if (null depends-on) t
+        (flet ((satisfies-depends-p (test)
+                 (funcall test (lambda (dep)
+                                 (eql t (resolve-dependencies dep)))
+                          (cdr depends-on))))
+          (ecase (car depends-on)
+            (and (satisfies-depends-p #'every))
+            (or  (satisfies-depends-p #'some))
+            (not (satisfies-depends-p #'notany)))))))
 
 (defun results-status (result-list)
   "Given a list of test results (generated while running a test)
@@ -93,74 +87,70 @@ run."))
     (funcall test-lambda)
     result-list))
 
-(defmethod run-test-lambda ((test test-case))
-  (with-run-state (result-list)
-    (bind-run-state ((current-test test))
-      (labels ((abort-test (e)
-                 (add-result 'unexpected-test-failure
-                             :test-expr nil
-                             :test-case test
-                             :reason (format nil "Unexpected Error: ~S~%~A." e e)
-                             :condition e))
-               (run-it ()
-                 (let ((result-list '()))
-                   (declare (special result-list))
-                   (handler-bind ((check-failure (lambda (e)
-                                                   (declare (ignore e))
-                                                   (unless *debug-on-failure*
-                                                     (invoke-restart
-                                                      (find-restart 'ignore-failure)))))
-                                  (error (lambda (e)
-                                           (unless (or *debug-on-error*
-                                                       (typep e 'check-failure))
-                                             (abort-test e)
-                                             (return-from run-it result-list)))))
-                     (restart-case
-                         (let ((*readtable* (copy-readtable))
-                               (*package* (runtime-package test)))
-                           (funcall (test-lambda test)))
-                       (retest ()
-                         :report (lambda (stream)
-                                   (format stream "~@<Rerun the test ~S~@:>" test))
-                         (return-from run-it (run-it)))
-                       (ignore ()
-                         :report (lambda (stream)
-                                   (format stream "~@<Signal an exceptional test failure and abort the test ~S.~@:>" test))
-                         (abort-test (make-instance 'test-failure :test-case test
-                                                    :reason "Failure restart."))))
-                     result-list))))
-        (let ((results (run-it)))
-          (setf (status test) (results-status results)
-                result-list (nconc result-list results)))))))
+(defgeneric run-test-lambda (test)
+  (:method ((test test-case))
+    (with-run-state (result-list)
+      (bind-run-state ((current-test test))
+        (labels ((abort-test (e)
+                   (add-result 'unexpected-test-failure
+                               :test-expr nil
+                               :test-case test
+                               :reason (format nil "Unexpected Error: ~S~%~A." e e)
+                               :condition e))
+                 (run-it ()
+                   (let ((result-list '()))
+                     (declare (special result-list))
+                     (handler-bind ((check-failure (lambda (e)
+                                                     (declare (ignore e))
+                                                     (unless *debug-on-failure*
+                                                       (invoke-restart
+                                                        (find-restart 'ignore-failure)))))
+                                    (error (lambda (e)
+                                             (unless (or *debug-on-error*
+                                                         (typep e 'check-failure))
+                                               (abort-test e)
+                                               (return-from run-it result-list)))))
+                       (restart-case
+                           (let ((*readtable* (copy-readtable))
+                                 (*package* (runtime-package test)))
+                             (funcall (test-lambda test)))
+                         (retest ()
+                           :report (lambda (stream)
+                                     (format stream "~@<Rerun the test ~S~@:>" test))
+                           (return-from run-it (run-it)))
+                         (ignore ()
+                           :report (lambda (stream)
+                                     (format stream "~@<Signal an exceptional test failure and abort the test ~S.~@:>" test))
+                           (abort-test (make-instance 'test-failure :test-case test
+                                                      :reason "Failure restart."))))
+                       result-list))))
+          (let ((results (run-it)))
+            (setf (status test) (results-status results)
+                  result-list (nconc result-list results))))))))
 
 (defgeneric %run (test-spec)
-  (:documentation "Internal method for running a test. Does not
-  update the status of the tests nor the special vairables !,
-  !!, !!!"))
-
-(defmethod %run ((test test-case))
-  (run-resolving-dependencies test))
-
-(defmethod %run ((tests list))
-  (mapc #'%run tests))
-
-(defmethod %run ((suite test-suite))
-  (let (suite-results)
-    (flet ((run-tests ()
-             (loop
-                :for test :being :the hash-values :of (tests suite)
-                :do (%run test))))
-      (unwind-protect
-           (bind-run-state ((result-list '()))
-             (run-tests)
-             (setf suite-results result-list
-                   (status suite) (every (fun (typep _ 'test-passed)) suite-results)))
-        (with-run-state (result-list)
-          (setf result-list (nconc result-list suite-results)))))))
-
-(defmethod %run ((test-name symbol))
-  (when (get-test test-name)
-    (%run (get-test test-name))))
+  (:documentation "Internal method for running a test. Does not update
+   the status of the tests nor the special vairables !, !!, or !!!")
+  (:method ((test test-case))
+    (run-resolving-dependencies test))
+  (:method ((tests list))
+    (mapc #'%run tests))
+  (:method ((suite test-suite))
+    (let (suite-results)
+      (flet ((run-tests ()
+               (loop
+                  :for test :being :the hash-values :of (tests suite)
+                  :do (%run test))))
+        (unwind-protect
+             (bind-run-state ((result-list '()))
+               (run-tests)
+               (setf suite-results result-list
+                     (status suite) (every (fun (typep _ 'test-passed)) suite-results)))
+          (with-run-state (result-list)
+            (setf result-list (nconc result-list suite-results)))))))
+  (:method ((test-name symbol))
+    (when (get-test test-name)
+      (%run (get-test test-name)))))
 
 (defvar *initial-!* (lambda () (format t "Haven't run that many tests yet.~%")))
 (defvar *!* *initial-!*)

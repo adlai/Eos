@@ -37,10 +37,8 @@
 (defmacro acond2 (&rest clauses)
   (when clauses
     (with-gensyms (val foundp)
-      (destructuring-bind ((test &rest progn) &rest others)
-          clauses
-        `(multiple-value-bind (,val ,foundp)
-             ,test
+      (destructuring-bind ((test &body progn) &rest others) clauses
+        `(multiple-value-bind (,val ,foundp) ,test
            (if (or ,val ,foundp)
                (let ((it ,val))
                  (declare (ignorable it))
@@ -78,7 +76,7 @@
 
 (defmacro list-match-case (target &body clauses)
   (when clauses
-    (destructuring-bind ((test . progn) . others) clauses
+    (destructuring-bind ((test &body progn) &rest others) clauses
       (with-gensyms (tgt binds success)
         (let ((vars (find-vars test nil)))
           `(let ((,tgt ,target)) ; (once-only (target) ..)

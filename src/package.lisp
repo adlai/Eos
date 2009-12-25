@@ -23,15 +23,6 @@
 	   #:pass
 	   #:fail
 	   #:*test-dribble*
-           #:for-all
-           #:gen-integer
-           #:gen-float
-           #:gen-character
-           #:gen-string
-           #:gen-list
-           #:gen-tree
-           #:gen-buffer
-           #:gen-one-element
 	   ;; running tests
            #:run
            #:run-all-tests

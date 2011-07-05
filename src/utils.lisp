@@ -5,6 +5,9 @@
 (defun ensure-list (x)
   (if (listp x) x (list x)))
 
+;; Make sure these macros are available when compiling this file
+(eval-when (:compile-toplevel :load-toplevel :execute)
+
 (defmacro fun (&body body)
   `(lambda (&optional _) (declare (ignorable _)) ,@body))
 
@@ -44,6 +47,8 @@
                  (declare (ignorable it))
                  ,@progn)
                (acond2 ,@others)))))))
+
+) ;; End of eval-when
 
 (defun varsymp (x)
   (and (symbolp x) (eql (char (symbol-name x) 0) #\?)))

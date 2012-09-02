@@ -12,22 +12,24 @@
           (:in-order-to :compile "check"
            (:requires (:load "utils")))
           (:in-order-to :compile "explain"
-           (:requires
-            (:load "classes")
-            (:load "check")))
+           (:requires (:load "classes")
+                      (:load "check")))
           (:in-order-to :compile "test"
            (:requires (:load "classes")))
           (:in-order-to :compile "suite"
-           (:requires
-            (:load "test")
-            (:load "utils")))
-          (:in-order-to :load "run"
-           (:requires
-            (:load "suite")
-            (:load "check")))))
+           (:requires (:load "test")
+                      (:load "utils")))
+          (:in-order-to :compile "run"
+           (:requires (:load "explain")
+                      (:load "suite")
+                      (:load "check")))))
 
 (defsystem eos-tests (:default-pathname "tests")
-  :members ("suite"
+  :members (("eos" :type :system)
+            "suite"
             "tests")
-  :rules ((:in-order-to :compile "tests"
+  :rules ((:in-order-to :compile :all
+           (:caused-by (:compile "eos"))
+           (:requires  (:load "eos")))
+          (:in-order-to :compile "tests"
            (:requires (:load "suite")))))

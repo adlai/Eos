@@ -51,7 +51,9 @@
 ) ;; End of eval-when
 
 (defun varsymp (x)
-  (and (symbolp x) (eql (char (symbol-name x) 0) #\?)))
+  (and (symbolp x)
+       (plusp (length (symbol-name x)))
+       (eql (char (symbol-name x) 0) #\?)))
 
 (defun binding (x binds)
   (labels ((recbind (x binds)

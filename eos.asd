@@ -23,6 +23,15 @@
                          ((:file "suite")
                           (:file "tests" :depends-on ("suite"))))))
 
+(defmethod asdf:operate :before ((op asdf:load-op)
+                                 (system (eql (asdf:find-system :Eos)))
+                                 &rest proclamations)
+  (declare (ignore proclamations))
+  (format t "~2&************************~@
+                ** Eos is deprecated! **~@
+                **   See README.mkdn  **~@
+                ************************~%"))
+
 (defmethod asdf:perform ((op asdf:test-op) (system (eql (asdf:find-system :Eos))))
   (format t "~2&*******************~@
                 ** Loading tests **~@

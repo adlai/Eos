@@ -1,0 +1,6 @@
+Eos was a unit testing library for Common Lisp.
+
+It began as a fork of FiveAM[1]; however, FiveAM development has continued,
+while that of Eos has not. Thus, Eos is now deprecated in favor of FiveAM.
+
+[1] https://github.com/sionescu/fiveam

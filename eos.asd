@@ -2,6 +2,7 @@
 
 (asdf:defsystem :Eos
   :author "Adlai Chandrasekhar"
+  :description "UNMAINTAINED fork of 5AM, a test framework"
   :license "MIT"
   :components ((:module "src"
                         :components
@@ -16,6 +17,7 @@
 
 (asdf:defsystem :Eos-tests
   :author "Adlai Chandrasekhar"
+  :description "UNMAINTAINED tests of an UNMAINTAINED fork"
   :license "MIT"
   :depends-on (:Eos)
   :components ((:module "tests"

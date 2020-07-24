@@ -43,45 +43,37 @@ If DEPENDS-ON is a symbol it is interpreted as `(AND
 depending on another.
 
 FIXTURE specifies a fixtrue to wrap the body in."
-  (let* ((tmp (gensym))
-         (suite-arg (getf (cdr (ensure-list name)) :suite tmp))
-         (suite-form (if (eq tmp suite-arg) '*suite*
-                         `(get-test ',suite-arg))))
-    (when (consp name)
-      ;; Copy `name' so we don't modify macro arguments destructively
-      (let ((name* (copy-list name)))
-        (remf (cdr name*) :suite)
-        (setf name name*)))
-    (destructuring-bind
-          (name &key depends-on (compile-at :run-time) fixture)
-        (ensure-list name)
-      (declare (type (member :run-time :definition-time) compile-at))
-      (let ((description (if (stringp (car body)) (pop body) ""))
-            (effective-body (if fixture
-                                (destructuring-bind (name &rest args)
-                                    (ensure-list fixture)
-                                  `((with-fixture ,name ,args ,@body)))
-                                body)))
-        `(progn
-           (setf (get-test ',name)
-                 (make-instance 'test-case
-                                :name ',name
-                                :runtime-package
-                                #-ecl ,*package*
-                                #+ecl (find-package ,(package-name *package*))
-                                :test-lambda
-                                (lambda ()
-                                  ,@ (ecase compile-at
-                                       (:run-time `((funcall
-                                                     (let ((*package* (find-package ',(package-name *package*))))
-                                                       (compile nil '(lambda ()
-                                                                      ,@effective-body))))))
-                                       (:definition-time effective-body)))
-                                :description ,description
-                                :depends-on ',depends-on))
-           (setf (gethash ',name (tests ,suite-form)) ',name)
-           (when *run-test-when-defined* (run! ',name))
-           ',name)))))
+  (destructuring-bind
+        (name &key depends-on (compile-at :run-time) fixture suite)
+      (ensure-list name)
+    (declare (type (member :run-time :definition-time) compile-at))
+    (let ((suite-form (if (null suite) '*suite* `(get-test ',suite)))
+          (description (if (stringp (car body)) (pop body) ""))
+          (effective-body (if fixture
+                              (destructuring-bind (name &rest args)
+                                  (ensure-list fixture)
+                                `((with-fixture ,name ,args ,@body)))
+                              body)))
+      `(progn
+         (setf (get-test ',name)
+               (make-instance 'test-case
+                              :name ',name
+                              :runtime-package
+                              #-ecl ,*package*
+                              #+ecl (find-package ,(package-name *package*))
+                              :test-lambda
+                              (lambda ()
+                                ,@ (ecase compile-at
+                                     (:run-time `((funcall
+                                                   (let ((*package* (find-package ',(package-name *package*))))
+                                                     (compile nil '(lambda ()
+                                                                    ,@effective-body))))))
+                                     (:definition-time effective-body)))
+                              :description ,description
+                              :depends-on ',depends-on))
+         (setf (gethash ',name (tests ,suite-form)) ',name)
+         (when *run-test-when-defined* (run! ',name))
+         ',name))))
 
 (defvar *run-test-when-defined* nil
   "When non-NIL tests are run as soon as they are defined.")

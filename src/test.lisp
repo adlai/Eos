@@ -47,7 +47,11 @@ FIXTURE specifies a fixtrue to wrap the body in."
          (suite-arg (getf (cdr (ensure-list name)) :suite tmp))
          (suite-form (if (eq tmp suite-arg) '*suite*
                          `(get-test ',suite-arg))))
-    (when (consp name) (remf (cdr name) :suite))
+    (when (consp name)
+      ;; Copy `name' so we don't modify macro arguments destructively
+      (let ((name* (copy-list name)))
+        (remf (cdr name*) :suite)
+        (setf name name*)))
     (destructuring-bind
           (name &key depends-on (compile-at :run-time) fixture)
         (ensure-list name)
